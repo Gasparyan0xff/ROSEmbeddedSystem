@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+    <launch>
+        <!-- Load joint controller configurations from YAML file to parameter server -->
+        <rosparam command="load" file="$(find myrobot_control)/config/diffdrive_controller.yaml"/>
+        <param name="/controller/enable_odom_tf" value="true"/>
+        <!-- Spawn controller -->
+        <node args="/controller /joint_state_controller" name="controller_spawner" output="screen" pkg="controller_manager" type="spawner"/>
+        <param name="robot_description" command="xacro --inorder '$(find myrobot_simulator)/urdf/myrobot.gazebo.xacro'"/>
+        <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+    </launch>

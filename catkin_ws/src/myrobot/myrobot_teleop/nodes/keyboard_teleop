@@ -1,0 +1,76 @@
+#!/usr/bin/env python
+import rospy
+from geometry_msgs.msg import Twist
+from pynput.keyboard import Key, KeyCode, Listener
+
+MINICAR_MAX_LIN_VEL = 1
+MINICAR_MAX_ANG_VEL = 2
+
+class KeyboardTeleop:    
+    def __init__(self):
+        rospy.init_node('keyboard_teleop')
+
+        cmd_vel_topic = rospy.get_param('/keyboard_teleop/cmd_vel', '/cmd_vel')
+        rospy.loginfo('Cmd Vel topic: ' + cmd_vel_topic)
+
+        self.pub = rospy.Publisher(cmd_vel_topic, Twist, queue_size=10)  
+
+        self.key_state_vel = 0
+        self.key_state_ang = 0
+        self.speed_mul = 0.25
+        self.target_linear_vel   = 0.0
+        self.target_angular_vel  = 0.0
+        self.keyboard_listener = None
+        
+    def run(self):
+        self.keyboard_listener = Listener(on_press=self.on_key_press, on_release=self.on_key_release)
+        self.keyboard_listener.start()
+        rate = rospy.Rate(10)
+        try:
+            while not rospy.is_shutdown():
+                self.update_key_state()
+                rate.sleep()
+        except rospy.ROSInterruptException:
+            pass
+        self.keyboard_listener.stop()
+        self.keyboard_listener.join()    
+
+    def update_key_state(self):
+        self.target_linear_vel = MINICAR_MAX_LIN_VEL * self.key_state_vel * self.speed_mul
+        self.target_angular_vel = MINICAR_MAX_ANG_VEL * self.key_state_ang
+        twist = Twist()
+        twist.linear.x = self.target_linear_vel; twist.linear.y = 0.0; twist.linear.z = 0.0
+        twist.angular.x = 0.0; twist.angular.y = 0.0; twist.angular.z = self.target_angular_vel
+        self.pub.publish(twist)
+
+    def on_key_press(self, key):
+        if key == KeyCode.from_char('w'):
+            self.key_state_vel = 1
+        elif key == KeyCode.from_char('s'):
+            self.key_state_vel = -1
+
+        if key == KeyCode.from_char('a'):
+            self.key_state_ang = 1
+        elif key == KeyCode.from_char('d'):
+            self.key_state_ang = -1
+        self.update_key_state()
+        return True
+
+    def on_key_release(self, key):
+        if key == KeyCode.from_char('w') and self.key_state_vel != 0:
+            self.key_state_vel = 0
+        elif key == KeyCode.from_char('s') and self.key_state_vel != 0:
+            self.key_state_vel = 0
+            
+        if key == KeyCode.from_char('a') and self.key_state_ang != 0:
+            self.key_state_ang = 0
+        elif key == KeyCode.from_char('d') and self.key_state_ang != 0:
+            self.key_state_ang = 0
+        elif key == Key.esc:
+            return False
+        self.update_key_state()
+        return True
+
+if __name__=="__main__":
+    teleop = KeyboardTeleop()
+    teleop.run()

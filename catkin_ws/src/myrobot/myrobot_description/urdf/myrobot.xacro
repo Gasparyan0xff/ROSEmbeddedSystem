@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<robot name="myrobot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <!-- property wheel -->
+    <xacro:property name="wheel_radius" value="0.0325"/>
+    <xacro:property name="wheel_mass" value="1"/>
+    <xacro:property name="wheel_width" value="0.02"/>
+    <xacro:property name="wheelbase_length" value="0.16"/>
+    <xacro:property name="wheelbase_offset" value="0.05"/>
+
+
+    <!-- property chassis -->
+    <xacro:property name="chassis_length" value="0.2"/>
+    <xacro:property name="chassis_width" value="0.125"/>
+    <xacro:property name="chassis_height" value="0.04"/>
+    <xacro:property name="chassis_clearance" value="0.02"/>
+    <xacro:property name="chassis_mass" value="10.0"/>
+
+    <xacro:include filename="$(find myrobot_description)/urdf/macro.xacro"/>
+
+    <!-- ============ BASE =============== -->
+    <xacro:box_inertial length="${chassis_length}" width="${chassis_width}" height="${chassis_height}">
+        <origin rpy="0 0 0" xyz="0 0 ${chassis_clearance}"/>
+    </xacro:box_inertial>
+    
+
+    <!-- ============ WHEELS =============== --> 
+    <xacro:wheel wheel_prefix="left" parent_link="base_link" left_right="1" radius="${wheel_radius}" width="${wheel_width}">
+        <origin xyz="${wheelbase_offset} ${OFFSET_WHEEL*wheelbase_length} ${wheel_radius - chassis_clearance}"/>
+    </xacro:wheel>
+
+    <xacro:wheel wheel_prefix="right" parent_link="base_link" left_right="-1" radius="${wheel_radius}" width="${wheel_width}">
+        <origin xyz="${wheelbase_offset} ${-OFFSET_WHEEL*wheelbase_length} ${wheel_radius - chassis_clearance}"/>
+    </xacro:wheel>
+
+    <xacro:back_wheel wheel_prefix="back_left" parent_link="base_link" left_right="1" radius="${wheel_radius}" width="${wheel_width}">
+        <origin xyz="${-wheelbase_offset} ${OFFSET_WHEEL*wheelbase_length} ${wheel_radius - chassis_clearance}"/>
+    </xacro:back_wheel>
+
+    <xacro:back_wheel wheel_prefix="back_right" parent_link="base_link" left_right="-1" radius="${wheel_radius}" width="${wheel_width}">
+        <origin xyz="${-wheelbase_offset} ${-OFFSET_WHEEL*wheelbase_length} ${wheel_radius - chassis_clearance}"/>
+    </xacro:back_wheel>
+
+    <!-- ============ IR SENSORS =============== --> 
+    <xacro:ir_sensor name="front_0" parent="base_link" sx="0.003" sy="0.008" sz="0.008">
+        <origin rpy="0 0 0" xyz="${0.525*chassis_length} 0 ${chassis_clearance}"/>
+    </xacro:ir_sensor>
+
+    <xacro:ir_sensor name="front_1" parent="base_link" sx="0.003" sy="0.008" sz="0.008">
+        <origin rpy="0 0 -0.4" xyz="${0.525*chassis_length} ${-0.5*chassis_width} ${chassis_clearance}"/>
+    </xacro:ir_sensor>
+
+    <xacro:ir_sensor name="front_2" parent="base_link" sx="0.003" sy="0.008" sz="0.008">
+        <origin rpy="0 0 0.4" xyz="${0.525*chassis_length} ${0.5*chassis_width} ${chassis_clearance}"/>
+    </xacro:ir_sensor>
+
+</robot>

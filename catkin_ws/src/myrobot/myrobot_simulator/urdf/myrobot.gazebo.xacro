@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<robot name="myrobot" xmlns:xacro="http://ros.org/wiki/xacro">
+    <xacro:include filename="$(find myrobot_description)/urdf/myrobot.xacro" />
+    <xacro:include filename="$(find myrobot_simulator)/urdf/macro.gazebo.xacro" />
+    <!-- Gazebo plugin for ROS Control -->
+    <gazebo>
+        <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+            <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+        </plugin>
+    </gazebo>
+
+    <xacro:macro name="ir_sensor_gazebo" params="name *topic_name *frame_name">
+        <gazebo reference="ir_sensor_${name}">
+            <sensor type="ray" name="ir_sensor_${name}_abc">
+                <pose>0 0 0 0 0 0</pose>
+                <update_rate>50</update_rate>
+                <visualize>true</visualize>
+                <always_on>true</always_on>
+                <ray>
+                    <scan>
+                        <horizontal>
+                            <samples>1</samples>
+                            <resolution>1.0</resolution>
+                            <min_angle>-0.01</min_angle>
+                            <max_angle>0.01</max_angle>
+                        </horizontal>
+                        <vertical>
+                            <samples>1</samples>
+                            <resolution>1.0</resolution>
+                            <min_angle>-0.01</min_angle>
+                            <max_angle>0.01</max_angle>
+                        </vertical>
+                    </scan>
+                    <range>
+                        <min>0.01</min>
+                        <max>2.35</max>
+                        <resolution>0.1</resolution>
+                    </range>
+                </ray>
+                <plugin filename="libgazebo_ros_range.so" name="gazebo_ros_range">
+                    <gaussianNoise>0.005</gaussianNoise>
+                    <alwaysOn>true</alwaysOn>
+                    <updateRate>5</updateRate>
+                    <xacro:insert_block name="topic_name"/>
+                    <xacro:insert_block name="frame_name"/>
+                    <visualize>true</visualize>
+                    <radiation>infrared</radiation>
+                    <fov>0.436</fov>
+                </plugin>
+            </sensor>
+        </gazebo>
+    </xacro:macro>
+
+    <xacro:ir_sensor_gazebo name="front_0">
+        <topicName>/myrobot/sensor/front_0</topicName>
+        <frameName>ir_sensor_front_0</frameName>
+    </xacro:ir_sensor_gazebo>
+    <xacro:ir_sensor_gazebo name="front_1">
+        <topicName>/myrobot/sensor/front_1</topicName>
+        <frameName>ir_sensor_front_1</frameName>
+    </xacro:ir_sensor_gazebo>
+     <xacro:ir_sensor_gazebo name="front_2">
+        <topicName>/myrobot/sensor/front_2</topicName>
+        <frameName>ir_sensor_front_2</frameName>
+    </xacro:ir_sensor_gazebo>
+</robot>

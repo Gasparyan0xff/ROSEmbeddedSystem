@@ -1,0 +1,163 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+     <!-- Constants for robot dimensions -->
+    <xacro:property name="PI" value="3.1415926535897931"/>
+    <xacro:property name="OFFSET_WHEEL" value="0.5"/>
+    <xacro:property name="BIAS" value="0.0001"/>
+
+
+    <!--        -->
+    <!-- корпус -->
+    <xacro:macro name="box_inertial" params="length width height *jorigin">
+        <link name="base_link">
+
+            <xacro:base_inertial length="${length}" width="${width}" height="${height}" mass="${chassis_mass}">
+                <xacro:insert_block name="jorigin"/>
+            </xacro:base_inertial>
+
+            <visual>
+                <xacro:insert_block name="jorigin"/>
+                <geometry>
+                    <box size="${length} ${width} ${height}"/>
+                </geometry>
+            </visual>
+
+            <collision>
+                <xacro:insert_block name="jorigin"/>
+                <geometry>
+                    <box size="${length} ${width} ${height}"/>
+                </geometry>
+            </collision>
+        </link>
+
+    </xacro:macro>
+
+    <!--        -->
+    <!-- колёса -->
+    <xacro:macro name="wheel" params="wheel_prefix parent_link left_right radius width 
+    *joint_origin">
+
+        <link name="${wheel_prefix}_wheel">
+            <xacro:cylinder_inertial length="${width}" mass="${wheel_mass}" radius="${radius}">
+                <origin rpy="${left_right * PI/2} 0 0" xyz="0 0 0"/>
+            </xacro:cylinder_inertial>
+            <visual>
+                <origin rpy="${left_right * PI/2} 0 0" xyz="0 0 0"/>
+                <geometry>
+                    <cylinder radius="${radius}" length="${width}"/>
+                    <!--mesh filename="package://myrobot_description/meshes/tire.dae" scale="${radius} ${radius} ${width/2}"/-->
+                </geometry>
+            </visual>
+
+            <collision>
+                <origin rpy="${left_right * PI/2} 0 0" xyz="0 0 0"/>
+                <geometry>
+                    <cylinder radius="${radius}" length="${width}"/>
+                </geometry>
+            </collision>
+        </link>
+
+        <joint name="${wheel_prefix}_wheel_joint" type="continuous">
+            <parent link="${parent_link}"/>
+            <child link="${wheel_prefix}_wheel"/>
+            <xacro:insert_block name="joint_origin"/>
+            <axis rpy="0 0 0" xyz="0 1 0"/>
+        </joint>
+
+        <transmission name="${wheel_prefix}_wheel_trans" type="SimpleTransmission"> 
+            <type>transmission_interface/SimpleTransmission</type>
+            <actuator name="${wheel_prefix}_wheel_motor">
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
+            <joint name="${wheel_prefix}_wheel_joint">
+                <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+            </joint>
+        </transmission>
+    </xacro:macro>
+
+    <!-- задние колёса -->
+    <xacro:macro name="back_wheel" params="wheel_prefix parent_link left_right radius width *joint_origin">
+    <link name="${wheel_prefix}_wheel">
+        <xacro:cylinder_inertial length="${width}" mass="${wheel_mass*0.25}" radius="${radius*0.5}">
+            <origin rpy="${left_right * PI/2} 0 0" xyz="0 0 0"/>
+        </xacro:cylinder_inertial>
+
+        <visual>
+            <origin rpy="${left_right * PI/2} 0 0" xyz="0 0 0"/>
+            <geometry>
+                <cylinder radius="${radius}" length="${width}"/>
+            </geometry>
+        </visual>
+
+        <collision>
+            <origin rpy="${left_right * PI/2} 0 0" xyz="0 0 0"/>
+            <geometry>
+                <cylinder length="${width}" radius="${radius}"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="${wheel_prefix}_wheel_joint" type="continuous">
+        <parent link="${parent_link}"/>
+        <child link="${wheel_prefix}_wheel"/>
+        <xacro:insert_block name="joint_origin"/>
+        <axis rpy="0 0 0" xyz="0 1 0"/>
+    </joint>
+  </xacro:macro>
+
+
+
+    <!--        -->
+    <!-- Датчик -->
+    <xacro:macro name="ir_sensor" params="name parent sx sy sz *origin">
+
+        <link name="ir_sensor_${name}">
+            <visual>
+                <geometry>
+                    <box size="${sx} ${sy} ${sz}"/>
+                </geometry>
+            </visual>
+        </link>
+
+        <joint name="ir_sensor_${name}_joint" type="fixed">
+            <parent link="${parent}"/>
+            <child link="ir_sensor_${name}"/>
+            <xacro:insert_block name="origin"/>
+        </joint>
+    </xacro:macro>
+
+    <!--         -->
+    <!-- Инерция -->
+    <xacro:macro name="cylinder_inertial" params="radius length mass *origin">
+        <inertial>
+        <mass value="${mass}"/>
+        <xacro:insert_block name="origin"/>
+        <inertia ixx="${0.0833333 * mass * (3 * radius * radius + length * length)}" 
+                ixy="0.0" ixz="0.0" iyy="${0.0833333 * mass * (3 * radius * radius + length * length)}" 
+                iyz="0.0" izz="${0.5 * mass * radius * radius}"/>
+        </inertial>
+    </xacro:macro>
+
+    <xacro:macro name="base_inertial" params="length width height mass *origin">
+        <inertial>
+        <mass value="${mass}"/>
+        <xacro:insert_block name="origin"/>
+        <inertia ixx="${0.0833333 * mass * (height*height + length*length)}" 
+                ixy="0.0" ixz="0.0" iyy="${0.0833333 * mass * (width*width + length*length)}" 
+                iyz="0.0" izz="${0.0833333 * mass * (width*width + height*height)}"/>
+        </inertial>
+    </xacro:macro>   
+
+    <xacro:macro name="base_no_inertial" params="mass *origin">
+        <inertial>
+        <mass value="${mass}"/>
+        <xacro:insert_block name="origin"/>
+        <inertial ixx="0.0" ixy="0.0" ixz="0.0" 
+                 iyy="0.0" iyz="0.0" izz="0.0"/>
+        </inertial>
+    </xacro:macro>  
+
+
+</robot>
